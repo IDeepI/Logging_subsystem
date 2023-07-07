@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.15)
+cmake_minimum_required(VERSION 3.16)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -20,10 +20,11 @@ file(GLOB_RECURSE SOURCES
 #Add the executable
 add_executable(${PROJECT_NAME} ${SOURCES})
 message(STATUS "Executables: ${SOURCES}")
+message(STATUS "Includes: ${INCLUDE_DIR}")
 
 #Add the target includes
 target_include_directories(${PROJECT_NAME} PRIVATE ${INCLUDE_DIR})
 target_include_directories(${PROJECT_NAME} PRIVATE ${SOURCE_DIR})
 
 #Using W versions of WIN API functions
-target_compile_definitions(${PROJECT_NAME} PRIVATE -DUNICODE)
+#target_compile_definitions(${PROJECT_NAME} PRIVATE -DUNICODE)
