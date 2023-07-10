@@ -5,7 +5,7 @@ public:
     ThreadPool();
 
     template<typename Func, typename... Args>
-    auto enqueue(Func&& func, Args&&... args) -> std::future<typename std::invoke_result_t<Func, Args...>> {
+    decltype(auto) enqueue(Func&& func, Args&&... args) {
         using ReturnType = typename std::invoke_result_t<Func, Args...>;
         auto task = std::make_shared<std::packaged_task<ReturnType()>>(std::bind(std::forward<Func>(func), std::forward<Args>(args)...));
         std::future<ReturnType> result = task->get_future();

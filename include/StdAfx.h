@@ -7,6 +7,7 @@
 #include <windows.h>
 
 #include <assert.h>
+#include <filesystem>
 #include <format>
 #include <future>
 #include <queue>

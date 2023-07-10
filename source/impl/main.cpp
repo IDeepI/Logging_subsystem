@@ -13,25 +13,23 @@ int wmain(int argc, wchar_t* argv[])
 
     //Test
 #ifdef _DEBUG
-//     STARTUPINFO si = { sizeof(si) }; PROCESS_INFORMATION pi = {};
-//     std::wstring path = L"\"C:\\Program Files\\ConEmu\\ConEmu\\ConEmuC.exe\" /AUTOATTACH";
-//     if (CreateProcess(NULL,
-//         &path[0],
-//         NULL, NULL, FALSE, NORMAL_PRIORITY_CLASS, NULL, NULL, &si, &pi))
-//     {
-//         CloseHandle(pi.hProcess); CloseHandle(pi.hThread);
-//     }
-
-
-    //lg::LogManager::instance():: ?? Нужен ли мне singleton?
-
+#define LOAD_TEST_SIZE 10000
     using namespace std::literals;
-    auto path{"/core/execution/orders"sv};
+    auto path1{"/core/execution/orders"sv};
+    auto path2{"/core/group/users"sv};
+    auto newRoot{"c:/tmp"sv};
     auto msg1{"<message1>"sv};
     auto msg2{"<message2>"sv};
-    auto msg3{"<message3>"sv};
-    lg::LogManager::Log(path, msg1);
-    lg::LogManager::Log(path, msg1, msg2);
+    getLogManager().log(path1.data(), msg1);
+    for (size_t i = 0; i < LOAD_TEST_SIZE; i++)
+        getLogManager().log(path1.data(), i, msg1, msg2);
+
+    for (size_t i = 0; i < LOAD_TEST_SIZE; i++)
+        getLogManager().log(path2.data(), i, msg2, msg1);
+
+//    getLogManager().setRoot(newRoot);
+    for (size_t i = 0; i < LOAD_TEST_SIZE; i++)
+        getLogManager().log(path2.data(), i, msg2, msg2);
 
   
     return 0;
