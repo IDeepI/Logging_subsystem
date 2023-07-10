@@ -20,20 +20,19 @@ int wmain(int argc, wchar_t* argv[])
     auto newRoot{"c:/tmp"sv};
     auto msg1{"<message1>"sv};
     auto msg2{"<message2>"sv};
-    getLogManager().log(path1.data(), msg1);
-    for (size_t i = 0; i < LOAD_TEST_SIZE; i++)
-        getLogManager().log(path1.data(), i, msg1, msg2);
 
-    for (size_t i = 0; i < LOAD_TEST_SIZE; i++)
+    getLogManager().log(path1.data(), msg1, msg1, msg1, msg1, msg1, msg1, msg1, msg1, msg1, msg1, msg1);
+
+    for (size_t i = 0; i < LOAD_TEST_SIZE; i++) {
+        getLogManager().log(path1.data(), i, msg1, msg1);
         getLogManager().log(path2.data(), i, msg2, msg1);
-
-//    getLogManager().setRoot(newRoot);
-    for (size_t i = 0; i < LOAD_TEST_SIZE; i++)
         getLogManager().log(path2.data(), i, msg2, msg2);
-
+        getLogManager().log(path2.data(), i, msg2);
+    }
+     
+    getLogManager().setRoot(newRoot);
   
     return 0;
-
 #endif // DEBUG
 }
 

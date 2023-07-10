@@ -42,6 +42,7 @@ namespace fm
                 assert(false);
             outfile << msg << std::endl;
         }
+
     private:
         bool createDirectory(const std::filesystem::path& filePath) const
         {

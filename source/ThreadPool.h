@@ -15,6 +15,8 @@ public:
         return result;
     }
 
+    bool busy() { return !_tasks.empty(); };
+
     ~ThreadPool();
 
 private:
@@ -22,7 +24,7 @@ private:
     std::queue<std::function<void()>> _tasks;
     std::condition_variable _condition;
     std::mutex _mutex;
-    bool _stop;
+    std::atomic<bool> _stop;
 };
 
 using ThreadPoolPtr = std::unique_ptr<ThreadPool>;

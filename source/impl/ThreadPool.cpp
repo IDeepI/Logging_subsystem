@@ -26,10 +26,7 @@ ThreadPool::ThreadPool() : _stop(false)
 
 ThreadPool::~ThreadPool()
 {
-    {
-        std::unique_lock<std::mutex> lock(_mutex);
-        _stop = true;
-    }
+    _stop = true;
     _condition.notify_all();
     for (auto& fut : _futures) {
         fut.get();

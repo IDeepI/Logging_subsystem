@@ -3,6 +3,8 @@
 #include "ThreadPool.h"
 #include "TimeManager.h"
 #include "FileManager.h"
+#include "FileGuard.h"
+#define WAIT_ALL_TASKS_MS 100
 
 namespace
 {	
@@ -25,10 +27,21 @@ namespace
     {
         friend class ThreadPool;
 	public:
+        ~LogManager() {
+            while (_pool.busy())
+                Sleep(WAIT_ALL_TASKS_MS);
+        };
+
 		template<typename... Args>
 		inline void log(std::string pathStr, Args... args)
 		{
-			_pool.enqueue(&LogManager::logImpl<Args...>, this, std::move(pathStr), std::make_tuple(args...));
+            try
+            {	
+				_pool.enqueue(&LogManager::logImpl<Args...>, this, std::move(pathStr), std::make_tuple(args...));
+            }
+            catch (...)
+            {
+            }
 		}
 
         std::filesystem::path getRoot() const {
@@ -38,30 +51,38 @@ namespace
 
         void setRoot(std::filesystem::path val) {
             std::scoped_lock(_rootMutex); 
-            _root = val;
+            _root = val.make_preferred();
         }
 
     private:
+        ThreadPool _pool{};
         std::mutex _rootMutex;
 		std::filesystem::path _root{std::filesystem::current_path()};
-        ThreadPool _pool{};
 
         template<typename... Ts>
         void logImpl(std::string pathStr, std::tuple<Ts...> tuple)
         {
-            lgtm::TimeManager time{};
-            std::stringstream msg;
-            msg << time.getTimeStamp();
-            msg << ",";
-            msg << std::this_thread::get_id();
-            msg << ":";
-            msg << tuple;
+            try
+            {
+                lgtm::TimeManager time{};
+                std::stringstream msg;
+                msg << time.getTimeStamp();
+                msg << ", ";
+                msg << std::this_thread::get_id();
+                msg << ": ";
+                msg << tuple;
 
-            fm::FileManager fileSys{};
-            auto fullPath = fileSys.generateFilePath(pathStr, getRoot());
+                fm::FileManager fileSys{};
+                auto fullPath = fileSys.generateFilePath(pathStr, getRoot());
 
-            // should lock then writing to the same file from few threads. How to check it? Mb on creation should check if the path to file already exist and in process?
-            fileSys.writeLog(fullPath, msg.str());
+                // Protect file from multi thread writing
+                fg::FileGuard fg{ fullPath };
+
+                fileSys.writeLog(fullPath, msg.str());
+            }
+            catch (...)
+            {
+            }
         }
 	};
 }
