@@ -1,5 +1,5 @@
 #pragma once
-#include <fstream>
+#include "FileGuard.h"
 
 #define DATE_SEPARATOR "_"
 
@@ -30,17 +30,11 @@ namespace fm
 
         void writeLog(const std::filesystem::path& filePath, std::string_view msg) const
         {
-            createDirectory(filePath.parent_path());
+            if (!createDirectory(filePath.parent_path()))
+                return;
 
-            std::fstream outfile;
-            if(std::filesystem::exists(filePath))
-                outfile.open(filePath, std::ios_base::app);
-            else
-                outfile.open(filePath, std::ios::out | std::ios::in | std::ios_base::app);
-
-            if (!outfile.is_open())
-                assert(false);
-            outfile << msg << std::endl;
+            fg::FileGuard fg{filePath};
+            fg.writeLine(msg);
         }
 
     private:

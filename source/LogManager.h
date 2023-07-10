@@ -3,7 +3,6 @@
 #include "ThreadPool.h"
 #include "TimeManager.h"
 #include "FileManager.h"
-#include "FileGuard.h"
 #define WAIT_ALL_TASKS_MS 100
 
 namespace
@@ -74,9 +73,6 @@ namespace
 
                 fm::FileManager fileSys{};
                 auto fullPath = fileSys.generateFilePath(pathStr, getRoot());
-
-                // Protect file from multi thread writing
-                fg::FileGuard fg{ fullPath };
 
                 fileSys.writeLog(fullPath, msg.str());
             }
