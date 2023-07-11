@@ -5,10 +5,10 @@
 #include "WinDump.h"
 #include "LogManager.h"
 #pragma endregion
-
+//This entry and dump is for testing and presentation only
 int wmain(int argc, wchar_t* argv[])
 {
-    // Create a dump file whenever the gateway crashes only on windows
+    // Create a dump file whenever the app crashes, only on windows
     SetUnhandledExceptionFilter(unhandled_handler);
 
     //Test

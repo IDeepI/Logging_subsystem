@@ -1,5 +1,7 @@
 #pragma once
 
+using fileStream = std::pair<std::fstream, std::mutex>;
+
 namespace fg
 {	
     class FileGuard
@@ -11,43 +13,46 @@ namespace fg
             std::shared_lock<std::shared_mutex> cLock(_containerMutex);
             if (_container.contains(_fullPath)) {
                 _streamPtr = _container.at(_fullPath);
+                return;
             }
             cLock.unlock();
 
-            _streamPtr = std::make_shared<std::fstream>(std::move(openStream()));
             std::unique_lock<std::shared_mutex> uniqueContainerLock(_containerMutex);
+            _streamPtr = std::make_shared<fileStream>();
+            _streamPtr->first = openStream(_fullPath);
             _container[std::filesystem::path(_fullPath)] = _streamPtr;
         }
 
         void writeLine(std::string_view msg) {
-            (*_streamPtr) << msg << std::endl;
+            std::scoped_lock lock(_streamPtr->second);
+            _streamPtr->first << msg << std::endl;
         };
 
         ~FileGuard()
         {
             // Check if shared ptr have only one ref del pair from container
-            std::shared_lock<std::shared_mutex> cLock(_containerMutex);
-            if(_container.at(_fullPath).use_count() > 2)
+            std::unique_lock<std::shared_mutex> uniqueContainerLock(_containerMutex);
+
+            //TEST:
+//            std::cout << _streamPtr.use_count() << " " << _fullPath << std::endl;
+
+            if(_streamPtr.use_count() > 1)
                 return;
 
-            cLock.unlock();
-
-            std::unique_lock<std::shared_mutex> uniqueContainerLock(_containerMutex);
             _container.erase(_fullPath);
         }
-
     private:
         static std::shared_mutex _containerMutex;
-        static std::map<std::filesystem::path, std::shared_ptr<std::fstream>> _container;
+        static std::map<std::filesystem::path, std::shared_ptr<fileStream>> _container;
         std::filesystem::path _fullPath;
-        std::shared_ptr<std::fstream> _streamPtr;
+        std::shared_ptr<fileStream> _streamPtr;
 
-        std::fstream openStream(){
+        std::fstream openStream(const std::filesystem::path& fullPath){
             std::fstream outfile;
-            if (std::filesystem::exists(_fullPath))
-                outfile.open(_fullPath, std::ios_base::app);
+            if (std::filesystem::exists(fullPath))
+                outfile.open(fullPath, std::ios_base::app);
             else
-                outfile.open(_fullPath, std::ios::out | std::ios::in | std::ios_base::app);
+                outfile.open(fullPath, std::ios::out | std::ios::in | std::ios_base::app);
 
             if (!outfile.is_open())
                 assert(false);
@@ -58,5 +63,5 @@ namespace fg
 
     __declspec(selectany) std::shared_mutex FileGuard::_containerMutex;
 
-    __declspec(selectany) std::map<std::filesystem::path, std::shared_ptr<std::fstream>> FileGuard::_container;
+    __declspec(selectany) std::map<std::filesystem::path, std::shared_ptr<fileStream>> FileGuard::_container;
 }
