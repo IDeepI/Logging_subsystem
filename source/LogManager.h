@@ -22,6 +22,11 @@ namespace
         return os;
     }
 
+    template <typename T>
+    concept Streamable = requires(std::ostream os, T value) {
+        { os << value };
+    };
+
 	class LogManager : public Singleton<LogManager>
     {
         friend class ThreadPool;
@@ -31,12 +36,12 @@ namespace
                 Sleep(WAIT_ALL_TASKS_MS);
         };
 
-		template<typename... Args>
-		inline void log(std::string pathStr, Args... args)
+		template<typename... Streamable>
+		inline void log(std::string pathStr, Streamable... args)
 		{
             try
             {	
-				_pool.enqueue(&LogManager::logImpl<Args...>, this, std::move(pathStr), std::make_tuple(args...));
+				_pool.enqueue(&LogManager::logImpl<Streamable...>, this, std::move(pathStr), std::make_tuple(args...));
             }
             catch (...)
             {

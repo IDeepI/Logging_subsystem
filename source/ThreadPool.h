@@ -2,7 +2,29 @@
 
 class ThreadPool {
 public:
-    ThreadPool();
+
+    ThreadPool() : _stop(false)
+    {
+        const auto threadCount = std::thread::hardware_concurrency();
+        for (size_t i = 0; i < threadCount; ++i) {
+            auto processTask = [this] {
+                while (true) {
+                    std::unique_lock<std::mutex> lock(_mutex);
+                    _condition.wait(lock, [this] {
+                        return !_tasks.empty() || _stop;
+                        });
+                    if (_stop && _tasks.empty()) {
+                        return;
+                    }
+                    auto task = std::move(_tasks.front());
+                    _tasks.pop();
+                    lock.unlock();
+                    task();
+                }
+            };
+            _futures.emplace_back(std::async(std::launch::async, processTask));
+        }
+    }
 
     template<typename Func, typename... Args>
     decltype(auto) enqueue(Func&& func, Args&&... args) {
@@ -17,7 +39,14 @@ public:
 
     bool busy() { return !_tasks.empty(); };
 
-    ~ThreadPool();
+    ~ThreadPool()
+    {
+        _stop = true;
+        _condition.notify_all();
+        for (auto& fut : _futures) {
+            fut.get();
+        }
+    }
 
 private:
     std::vector<std::future<void>> _futures;
