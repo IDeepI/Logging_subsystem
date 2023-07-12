@@ -12,7 +12,6 @@ int wmain(int argc, wchar_t* argv[])
     SetUnhandledExceptionFilter(unhandled_handler);
 
     //Test
-#ifdef _DEBUG
 #define LOAD_TEST_SIZE 10000
     using namespace std::literals;
     auto path1{"/core/execution/orders"sv};
@@ -33,6 +32,5 @@ int wmain(int argc, wchar_t* argv[])
     getLogManager().setRoot(newRoot);
   
     return 0;
-#endif // DEBUG
 }
 

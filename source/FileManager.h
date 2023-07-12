@@ -30,24 +30,8 @@ namespace fm
 
         void writeLog(const std::filesystem::path& filePath, std::string_view msg) const
         {
-            if (!createDirectory(filePath.parent_path()))
-                return;
-
             fg::FileGuard fg{filePath};
             fg.writeLine(msg);
-        }
-
-    private:
-        bool createDirectory(const std::filesystem::path& filePath) const
-        {
-			if (std::filesystem::exists(filePath))
-				return true;
-			
-            std::error_code err;
-            if (!std::filesystem::create_directories(filePath, err))
-				return false;
-			
-			return true;
         }
 	};
 }
